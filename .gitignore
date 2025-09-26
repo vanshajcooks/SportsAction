@@ -1,0 +1,44 @@
+# Large dataset files (keep structure but not data)
+data/processed/*/
+data/frames/
+data/features/
+data/*.jpg
+data/*.png
+data/*.mp4
+data/*.avi
+
+# Model files (keep structure and metadata)
+experiments/*/*.pth
+experiments/*/*.pkl
+experiments/*/*.h5
+experiments/*/*.ckpt
+models/*.pth
+models/*.pkl
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment and IDE
+.env
+.venv/
+env/
+venv/
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+
+# Large files
+*.zip
+*.tar.gz
+*.rar

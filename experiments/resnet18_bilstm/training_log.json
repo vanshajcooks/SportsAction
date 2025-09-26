@@ -1,0 +1,35 @@
+{
+  "experiment_name": "resnet18_bilstm", 
+  "timestamp": "2025-09-26",
+  "model_config": {
+    "backbone": "resnet18",
+    "sequence_model": "bilstm",
+    "num_classes": 12,
+    "hidden_size": 256,
+    "num_layers": 2,
+    "dropout": 0.3
+  },
+  "training_config": {
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "epochs": 50,
+    "optimizer": "Adam",
+    "scheduler": "StepLR",
+    "weight_decay": 1e-4
+  },
+  "results": {
+    "best_epoch": null,
+    "best_accuracy": null,
+    "best_val_loss": null,
+    "final_train_acc": null,
+    "final_val_acc": null,
+    "training_time_hours": null
+  },
+  "dataset_info": {
+    "train_samples": null,
+    "val_samples": null, 
+    "test_samples": null,
+    "data_split": "70/15/15"
+  },
+  "notes": "Lightweight ResNet18 + BiLSTM combination. Faster training and inference while maintaining good performance."
+}
