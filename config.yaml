@@ -1,0 +1,87 @@
+# config.yaml - Global configuration for SportsAction project
+
+# ============================================
+# DATA CONFIGURATION
+# ============================================
+data:
+  raw_dir: "data/raw/VIDEO_RGB"                     # Path to original .avi videos
+  frames_dir: "data/frames"               # Output directory for extracted frames
+  annotations_dir: "data/annotations"     # Directory for labels/annotations
+  
+  # Frame extraction settings
+  frame_size: 224                         # Frame resolution (224 for ResNet/EfficientNet)
+  fps: 15                                 # 15 FPS to capture fast tennis movements
+  split_ratios: [0.7, 0.15, 0.15]         # [train, val, test] split ratios
+
+# ============================================
+# MODEL CONFIGURATION
+# ============================================
+model:
+  backbone:
+    name: "efficientnet_b0"               # Options: efficientnet_b0, resnet18, densenet121
+    pretrained: true                      # Use ImageNet pretrained weights
+  
+  temporal:
+    type: "ms-tcn"                        # Options: ms-tcn, bilstm, gru, none
+    hidden_size: 256                      # Hidden dimension for RNN/TCN
+    num_layers: 2                         # Number of temporal layers
+    bidirectional: true                   # Use bidirectional (for LSTM/GRU)
+  
+  classification:
+    dropout: 0.3                          # Increased slightly to prevent temporal overfitting
+
+# ============================================
+# TRAINING CONFIGURATION
+# ============================================
+training:
+  batch_size: 8                           # Batch size for training
+  num_epochs: 50                          # Total training epochs
+  num_frames: 64                          # Frames per sequence window (segmentation needs longer context)
+  
+  # Optimizer
+  optimizer:
+    name: "adamw"                         # AdamW usually performs better with transformers/efficientnets
+    lr: 1.0e-4                            # Learning rate
+    weight_decay: 1.0e-4                  # L2 regularization
+    
+  # Learning rate scheduler
+  scheduler:
+    type: "cosine"                        # Cosine annealing works great for fine-tuning
+    step_size: 10                         # Steps before decay (if using step)
+    gamma: 0.5                            # Decay factor
+  
+  # Training strategy
+  mixed_precision: true                   # Use AMP (Automatic Mixed Precision)
+  gradient_clip: 2.0                      # Max gradient norm
+  num_workers: 4                          # DataLoader workers
+  pin_memory: true                        # Pin memory for DataLoader
+
+# ============================================
+# EVALUATION CONFIGURATION
+# ============================================
+evaluation:
+  batch_size: 4                           # Batch size for evaluation
+  num_workers: 4                          # DataLoader workers
+  metrics:
+    - accuracy
+    - f1_score
+    - iou                                 # CRITICAL: Intersection over Union for boundaries
+    - f1_overlap                          # CRITICAL: F1 at specific overlap thresholds
+    - confusion_matrix
+
+# ============================================
+# OUTPUT CONFIGURATION
+# ============================================
+output:
+  experiments_dir: "experiments"          # Directory to save experiment results
+  logs_dir: "logs"                        # Directory for training logs
+  checkpoints_interval: 5                 # Save checkpoint every N epochs
+  save_best_only: true                    # Only save best model on validation
+
+# ============================================
+# DEVICE & RUNTIME CONFIGURATION
+# ============================================
+runtime:
+  device: "cuda"                          # Options: cuda, cpu
+  seed: 42                                # Random seed for reproducibility
+  verbose: true                           # Enable verbose logging

@@ -1,53 +1,40 @@
-# SportsAction: Tennis Action Recognition
+# tennis_segmentation - Video Action Recognition
 
-AI model for recognizing tennis actions from video sequences using deep learning.
+A comprehensive deep learning framework for recognizing sports actions from video sequences using spatial-temporal modeling.
 
-## 🎾 Project Overview
+## Project Overview
 
-This project implements a deep learning system to classify tennis actions from video frames. The system supports multiple CNN architectures (ResNet, DenseNet, InceptionV3) with optional temporal modeling using BiLSTM.
+This project implements a modular system for video action recognition using:
+- **Spatial Branch**: CNN backbones (ResNet18, DenseNet121, Inception-v3) for frame-level features
+- **Temporal Branch**: BiLSTM, LSTM, GRU, or TCN for temporal modeling
+- **Multi-scale Architecture**: Supports flexible combinations of spatial and temporal modules
 
-## 🏗️ Architecture
-
-- **Input**: Sequence of video frames (tennis actions)
-- **Models**: CNN feature extraction + optional BiLSTM temporal modeling  
-- **Output**: 12 tennis action classes
-
-## 📊 Current Experiments
-
-| Experiment | Model | Status | Best Accuracy | Notes |
-|-----------|--------|--------|---------------|-------|
-| `densenet121_bilstm` | DenseNet121 + BiLSTM | ✅ Trained | - | Best combination model |
-| `resnet18_bilstm` | ResNet18 + BiLSTM | ✅ Trained | - | Lightweight option |
-| `inception_v3_none` | InceptionV3 | ✅ Trained | - | Good baseline |
-| `resnet_bilstm` | ResNet + BiLSTM | ✅ Trained | - | Standard combination |
-| `densenet121_none` | DenseNet121 | ✅ Trained | - | CNN only |
-| `resnet18_none` | ResNet18 | ✅ Trained | - | Fastest inference |
-
-## 🚀 Quick Start
-
-### Setup Environment
-```bash
-pip install -r requirements.txt
-```
-
-### Train a Model
-```bash
-python src/train.py --model resnet18 --sequence_model bilstm --epochs 50
-```
-
-### Test Model
-```bash
-python src/test_model.py --experiment resnet18_bilstm
-```
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-SportsAction/
-├── src/                    # Source code
-│   ├── train.py           # Training script
-│   ├── test_model.py      # Evaluation script  
-│   ├── models.py          # Model architectures
+tennis_segmentation/
+├── data/
+│   ├── raw/                 # Original .avi video files
+│   ├── frames/              # Extracted frames (train/val/test splits)
+│   └── annotations/         # Label files
+├── src/
+│   ├── data_prep/
+│   │   ├── extract_frames.py    # Video frame extraction
+│   │   └── dataset.py           # PyTorch Dataset loader
+│   ├── models/
+│   │   ├── spatial_extractor.py # CNN backbones
+│   │   ├── temporal_brain.py    # Temporal modules (LSTM, GRU, TCN)
+│   │   └── video_classifier.py  # Complete model
+│   ├── training/
+│   │   ├── train.py             # Main training loop
+│   │   ├── test.py              # Evaluation script
+│   │   └── metrics.py           # Metrics (F1, accuracy, IoU)
+│   └── utils/
+│       └── visualizer.py        # Visualization tools
+├── notebooks/               # Jupyter notebooks
+├── requirements.txt         # Dependencies
+├── config.yaml              # Configuration
+└── README.md
 │   ├── dataset.py         # Data loading
 │   └── prepare_data.py    # Data preprocessing
 ├── experiments/           # Trained models & results

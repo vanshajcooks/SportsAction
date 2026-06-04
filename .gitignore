@@ -1,44 +1,60 @@
-# Large dataset files (keep structure but not data)
-data/processed/*/
-data/frames/
-data/features/
-data/*.jpg
-data/*.png
-data/*.mp4
-data/*.avi
+# ============================================================================
+# SportsAction Deep Learning Project - Git Ignore Rules
+# ============================================================================
 
-# Model files (keep structure and metadata)
-experiments/*/*.pth
-experiments/*/*.pkl
-experiments/*/*.h5
-experiments/*/*.ckpt
-models/*.pth
-models/*.pkl
+# Data directories - large datasets should not be committed
+# Ignore entire data/ directory including raw video files, extracted frames, and annotations
+data/
 
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+# Model weights - PyTorch checkpoints
+# Ignore .pth and .pt files at all depths in experiments/
+# NOTE: .json log files (e.g., training_log.json) are NOT ignored - they will be tracked
+experiments/**/*.pth
+experiments/**/*.pt
+experiments/**/*.pkl
+experiments/**/*.h5
+experiments/**/*.ckpt
 
-# Environment and IDE
-.env
+# Virtual environments - do not commit environment folders
 .venv/
-env/
 venv/
-.DS_Store
+env/
+
+# Python artifacts and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE and editor configurations
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Logs and temporary files
-*.log
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Local logs and runtime files
 logs/
+*.log
+failed_files.log
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Miscellaneous
+.env
+*.bak
 temp/
 tmp/
-
-# Large files
 *.zip
 *.tar.gz
 *.rar
+_corrupted_backup/
