@@ -22,6 +22,48 @@ from src.training.metrics import MetricsTracker
 
 FAILED_LOG = PROJECT_ROOT / "failed_files.log"
 
+
+class EarlyStopping:
+    """Early stopping callback based on validation metric."""
+    
+    def __init__(self, patience=10, metric="f1", mode="max", min_delta=0.0):
+        """
+        Args:
+            patience (int): Number of epochs with no improvement after which training stops
+            metric (str): Metric to monitor ("f1", "accuracy", "loss")
+            mode (str): "max" if higher is better, "min" if lower is better
+            min_delta (float): Minimum change to qualify as improvement
+        """
+        self.patience = patience
+        self.metric = metric
+        self.mode = mode
+        self.min_delta = min_delta
+        
+        self.best_value = float("-inf") if mode == "max" else float("inf")
+        self.counter = 0
+        self.best_epoch = 0
+        
+    def __call__(self, current_value, epoch):
+        """
+        Check if training should stop.
+        Returns True if training should stop, False otherwise.
+        """
+        if self.mode == "max":
+            improved = current_value > self.best_value + self.min_delta
+        else:
+            improved = current_value < self.best_value - self.min_delta
+            
+        if improved:
+            self.best_value = current_value
+            self.counter = 0
+            self.best_epoch = epoch
+            return False
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+            return False
+
 def load_config(config_path="config.yaml"):
     with open(PROJECT_ROOT / config_path, "r") as file:
         return yaml.safe_load(file)
@@ -102,7 +144,9 @@ def train():
     params = list(spatial_model.parameters()) + list(temporal_model.parameters())
     print(f"Total trainable parameters: {sum(p.numel() for p in params if p.requires_grad):,}")
 
-    criterion = nn.CrossEntropyLoss()
+    # Loss with label smoothing (improved generalization)
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    
     optimizer = torch.optim.AdamW(
         params, 
         lr=float(config["training"]["optimizer"]["lr"]), 
@@ -116,7 +160,11 @@ def train():
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=config["training"]["scheduler"]["step_size"], gamma=config["training"]["scheduler"]["gamma"])
         
     scaler = GradScaler(enabled=config["training"]["mixed_precision"])
+    
+    # Early stopping based on validation F1
+    early_stopping = EarlyStopping(patience=15, metric="f1", mode="max", min_delta=0.001)
 
+    best_val_f1 = 0.0
     best_val_acc = 0.0
     training_log = []
     num_epochs = config["training"]["num_epochs"]
@@ -177,8 +225,9 @@ def train():
             'elapsed_time': elapsed
         })
 
-        # Save Best Model
-        if val_metrics['accuracy'] > best_val_acc:
+        # Save Best Model (based on F1 for better generalization)
+        if val_metrics['f1'] > best_val_f1:
+            best_val_f1 = val_metrics['f1']
             best_val_acc = val_metrics['accuracy']
             ckpt_path = EXP_DIR / "best_model.pth"
             torch.save({
@@ -187,14 +236,21 @@ def train():
                 "temporal_state": temporal_model.state_dict(),
                 "optimizer_state": optimizer.state_dict(),
                 "val_acc": best_val_acc,
+                "val_f1": best_val_f1,
             }, ckpt_path)
-            print(f"✅ Best model saved (val_acc: {best_val_acc:.4f})")
+            print(f"✅ Best model saved (val_f1: {best_val_f1:.4f}, val_acc: {best_val_acc:.4f})")
+        
+        # Early stopping check
+        if early_stopping(val_metrics['f1'], epoch):
+            print(f"\n⏸️  Early stopping triggered at epoch {epoch}")
+            print(f"Best F1 score: {best_val_f1:.4f} at epoch {early_stopping.best_epoch}")
+            break
 
     # Save training log
     with open(EXP_DIR / "training_log.json", 'w') as f:
         json.dump(training_log, f, indent=2)
 
-    print(f"\n✅ Training complete. Best val acc: {best_val_acc:.4f}")
+    print(f"\n✅ Training complete. Best val F1: {best_val_f1:.4f}, Best val Acc: {best_val_acc:.4f}")
 
 if __name__ == "__main__":
     train()

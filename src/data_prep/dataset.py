@@ -39,12 +39,26 @@ class TennisActionDataset(Dataset):
                 if video_dir.is_dir():
                     self.video_folders.append((video_dir, self.class_to_idx[cls_name]))
 
-        # ImageNet normalization transforms required for pre-trained CNN backbones
-        self.transform = transforms.Compose([
-            transforms.Resize((self.frame_size, self.frame_size)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        # Split-specific transforms
+        self.split = split
+        
+        if split == "train":
+            # Strong augmentations for training (improved generalization)
+            self.transform = transforms.Compose([
+                transforms.RandomResizedCrop((self.frame_size, self.frame_size), scale=(0.8, 1.0), ratio=(0.9, 1.1)),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+                transforms.ToTensor(),
+                transforms.RandomErasing(p=0.3, scale=(0.02, 0.2), ratio=(0.3, 3.0)),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            # Standard transforms for validation/test (deterministic, no augmentation)
+            self.transform = transforms.Compose([
+                transforms.Resize((self.frame_size, self.frame_size)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
     def __len__(self):
         return len(self.video_folders)
